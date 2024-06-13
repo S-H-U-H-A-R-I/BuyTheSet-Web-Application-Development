@@ -1,0 +1,28 @@
+<!-- payments/templates/payments/order_confirmation_email.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Order Confirmation</title>
+</head>
+<body>
+    <h2>Thank you for your purchase!</h2>
+    <p>Your order has been successfully placed.</p>
+    <h3>Order Details:</h3>
+    <p>Order Number: {{ order.id }}</p>
+    <p>Order Date: {{ order.date_ordered }}</p>
+    <h3>Purchased Items:</h3>
+    <ul>
+        {% for item in order_items %}
+            <li>{{ item.product.name }} - Quantity: {{ item.quantity }}</li>
+        {% endfor %}
+    </ul>
+    <p>Total Amount Owed: R{{ order.total_amount }}</p>
+    {% if order.is_collect %}
+        <p>Collection Address: 24 brantwood street, Kuilsriver, Cape Town</p>
+    {% else %}
+        <p>Shipping Address: {{ order.shipping_address }}</p>
+    {% endif %}
+    <p>Thank you for shopping with us!</p>
+</body>
+</html>

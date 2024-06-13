@@ -1,0 +1,617 @@
+{% extends 'store/base.html' %}
+{% block content %}
+<div class="container custom-my checkout-container d-flex align-items-center justify-content-center" style="min-height: calc(100vh - 400px);">
+    <div class="row justify-content-center w-100">
+        <div class="col-md-7">
+            <div class="card shadow">
+                <div class="card-body d-flex flex-column">
+                    <h4 class="checkout-heading">ORDER SUMMARY</h4>
+                    <hr class="cart-item-separator heading-separator">
+                    <div id="checkoutItems" class="checkout-items-container">
+                        {% for item in cart_items_data %}
+                        <div class="cart-item" data-product-id="{{ item.id }}">
+                            <a href="/product/{{item.id}}" class="cart-item-link">
+                                <img src="{{ item.image_url }}" alt="{{ item.name }}" class="cart-item-image">
+                            </a>
+                            <div class="cart-item-details">
+                                <h6 title="{{ item.name }}">{{ item.name }}</h6>
+                                <p class="fw-bold">R{{ item.price }}</p>
+                            </div>
+                            <div class="quantity-input">
+                                <button class="quantity-btn minus-btn" data-product-id="{{ item.id }}">-</button>
+                                <input type="number" class="quantity-field" value="{{ item.quantity }}" data-product-id="{{ item.id }}" data-price="{{ item.price }}" max="{{ item.product.quantity }}">
+                                <button class="quantity-btn plus-btn" data-product-id="{{ item.id }}">+</button>
+                            </div>
+                            <div class="cart-item-total">
+                                <p class="fw-bold">R<span class="total-price">0.00</span></p>
+                            </div>
+                            <i class="bi bi-x-circle remove-item" data-product-id="{{ item.id }}" onclick="removeCheckoutItem(event)"></i>
+                        </div>
+                        {% if not forloop.last %}
+                            <hr class="cart-item-separator">
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                    <hr class="cart-item-separator">
+                    <div class="text-right">
+                        <h7 id="shipping-fee">Delivery: R{{ default_shipping_fee }}</h7>
+                        <h5>Total: R<span id="total-amount">{{ cart_total }}</span></h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-5">
+            <div class="card shadow">
+                <div class="card-body d-flex flex-column">
+                    <h4>ORDER INFORMATION</h4>
+                    <hr class="cart-item-separator">
+                    <form id="order-form" action="{% url 'save_shipping_info' %}" method="POST">
+                        {% csrf_token %}
+                        <div id="shipping-fields">
+                            {{ form.as_p }}
+                        </div>
+                        <hr class="cart-item-separator">
+                        <div id="map" style="height: 400px; display: none;"></div>
+                        <div class="container my-3 d-flex justify-content-between">
+                            <button type="button" class="btn btn-dark" id="pay-button" onclick="saveOrderInfo()">Proceed</button>
+                            <div class="d-flex justify-content-between ">
+                                <div class="form-check checkout-checkbox">
+                                    <input class="form-check-input" type="checkbox" name="payment_method" id="cash-payment" value="cash">
+                                    <label class="form-check-label" for="cash-payment">Cash</label>
+                                </div>
+                                <div class="form-check checkout-checkbox" style="margin-left: 10px;">
+                                    <input class="form-check-input" type="checkbox" name="is_collect" id="is-collect" value="True">
+                                    <label class="form-check-label" for="is-collect">Collect</label>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                    <form id="paystack-form">
+                        <input type="hidden" name="email" value="">
+                        <input type="hidden" name="first_name" value="">
+                        <input type="hidden" name="last_name" value="">
+                        <input type="hidden" name="phone" value="">
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!--Quantity Update Script-->
+{% endblock %}
+{% block scripts %}
+<script>
+    function updateCheckoutQuantity(productId, quantity) {
+        // send an AJAX request to the server to update the quantity of the product
+        fetch('/cart/update/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken'),
+            },
+            body: JSON.stringify({
+                product_id: productId,
+                quantity: quantity,
+            }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            // if the response is a success, update the cart items
+            if (data.success) {
+                console.log('quantity updated successfully');
+                updateCartItemTotal(productId)
+            } else {
+                console.error('Error updating quantity', data.error);
+            }
+        })
+        .catch(error => {
+            console.log('Error updating quantity', error);
+        });
+    }
+
+
+    // Update cart item total
+    function updateCartItemTotal(productId) {
+        var cartItem = document.querySelector(`.cart-item[data-product-id="${productId}"]`);
+        if (cartItem) {
+            var quantityField = cartItem.querySelector('.quantity-field');
+            var totalPriceElement = cartItem.querySelector('.total-price');
+            var price = parseFloat(quantityField.dataset.price);
+            var quantity = parseInt(quantityField.value);
+            totalPriceElement.textContent = (price * quantity).toFixed(2);
+        }
+    }
+
+    function updateTotalAmount() {
+        var totalAmount = 0;
+        var cartItems = document.querySelectorAll('.cart-item');
+        cartItems.forEach(function(item) {
+            var quantityField = item.querySelector('.quantity-field');
+            var price = parseFloat(quantityField.dataset.price);
+            var quantity = parseInt(quantityField.value);
+            totalAmount += (price * quantity);
+        });
+        var isCollectChecked = document.getElementById('is-collect').checked;
+        var shippingFee = parseFloat(document.getElementById('shipping-fee').innerText.split('R')[1]);
+        if (isCollectChecked) {
+            totalAmount -= shippingFee;
+        } else {
+            totalAmount += shippingFee;
+        }
+        var totalAmountElement = document.getElementById('total-amount');
+        totalAmountElement.textContent = totalAmount.toFixed(2);
+    }
+
+
+    // Attach event listeners to the quantity buttons and fields
+    document.addEventListener('DOMContentLoaded', function() {
+        var quantityFields = document.querySelectorAll('.checkout-items-container .quantity-field');
+        var minusBtns = document.querySelectorAll('.checkout-items-container .minus-btn');
+        var plusBtns = document.querySelectorAll('.checkout-items-container .plus-btn');
+        var isCollectCheckbox = document.getElementById('is-collect');
+
+
+        let updateQuantityTimeout;
+
+        quantityFields.forEach(field => {
+            updateCartItemTotal(field.dataset.productId);
+            field.addEventListener('change', function() {
+                var productId = this.dataset.productId;
+                var quantity = parseInt(this.value);
+                var maxQuantity = parseInt(this.max);
+                if (quantity > 0  && quantity <= maxQuantity) {
+                    clearTimeout(updateQuantityTimeout);
+                    updateQuantityTimeout = setTimeout(() => {
+                        updateCheckoutQuantity(productId, quantity);
+                        updateCartItemTotal(productId);
+                        updateTotalAmount();
+                    }, 500);
+                } else {
+                    
+                }
+            });
+        });
+
+        minusBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                var productId = this.dataset.productId;
+                var quantityField = this.nextElementSibling;
+                var quantity = parseInt(quantityField.value);
+                var maxQuantity = parseInt(quantityField.max);
+                if (quantity > maxQuantity) {
+                    quantity = maxQuantity
+                    quantityField.value = quantity;
+                }
+                if (quantity > 1) {
+                    quantity--;
+                    quantityField.value = quantity;
+                    clearTimeout(updateQuantityTimeout);
+                    updateQuantityTimeout = setTimeout(() => {
+                        updateCheckoutQuantity(productId, quantity);
+                        updateCartItemTotal(productId);
+                        updateTotalAmount();
+                    }, 500);
+                }
+            });
+        });
+
+        plusBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                var productId = this.dataset.productId;
+                var quantityField = this.previousElementSibling;
+                var quantity = parseInt(quantityField.value);
+                var maxQuantity = parseInt(quantityField.max);
+                if (quantity > maxQuantity) {
+                    quantity = maxQuantity
+                    quantityField.value = quantity;
+                }
+                if (quantity < maxQuantity) {
+                    quantity++;
+                    quantityField.value = quantity;
+                    clearTimeout(updateQuantityTimeout);
+                    updateQuantityTimeout = setTimeout(() => {
+                        updateCheckoutQuantity(productId, quantity);
+                        updateCartItemTotal(productId);
+                        updateTotalAmount();
+                    }, 500);
+                }
+            });
+        });
+
+        isCollectCheckbox.addEventListener('change', function() {
+            updateTotalAmount();
+        });
+
+        updateTotalAmount();
+    });
+
+
+    // Remove item from checkout
+    function removeCheckoutItem(event) {
+        var productId = event.target.dataset.productId;
+
+        // Send an AJAX request to the server to remove the item
+        fetch('/cart/delete/', {
+            method: 'POST',
+            headers: {
+                'content-type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken'),
+            },
+            body: JSON.stringify({
+                product_id: productId,
+            }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log('Item removed successfully');
+                location.reload();
+            } else {
+                console.error('Error removing item', data.error); 
+            }
+        })
+        .catch(error => {
+            console.error('Error removing item:', error)
+        });
+    }
+</script>
+ <!--Google Maps Javascript API-->
+<script>
+    // Get the purchased product details and assign it to a JavaScript variable
+    var purchasedProducts = [];
+    {% for item in cart_items_data %}
+        purchasedProducts.push({
+            'name': '{{ item.name }}',
+            'quantity': {{ item.quantity }},
+            'price': {{ item.price }},
+            'total': {{ item.total }},
+        });
+    {% endfor %}
+
+</script>
+<script>
+    var defaultShippingFee = {{ default_shipping_fee }};
+    var cartTotal = {{ cart_total }};
+    var totalWithoutShipping = cartTotal - defaultShippingFee;
+    var isCollectChecked = localStorage.getItem('isCollectChecked') === 'true';
+    var cashPaymentCheckbox = document.getElementById('cash-payment');
+
+
+    function updateCollectState(){
+        var address1Field = document.getElementById('id_address1').parentNode;
+        var address2Field = document.getElementById('id_address2').parentNode;
+        var shippingFee = document.getElementById('shipping-fee');
+        var totalAmount = document.getElementById('total-amount');
+        if (isCollectChecked) {
+            address1Field.classList.add('d-none');
+            address2Field.classList.add('d-none');
+            shippingFee.innerText = 'Delivery: R0.00';
+            totalAmount.innerText = totalWithoutShipping;
+        } else {
+            address1Field.classList.remove('d-none');
+            address2Field.classList.remove('d-none');
+            shippingFee.innerText = 'Delivery: R{{ default_shipping_fee }}0';
+            totalAmount.innerText = cartTotal;
+        };
+    };
+    document.addEventListener('DOMContentLoaded', function() {
+        var isCollectCheckbox = document.getElementById('is-collect');
+        isCollectCheckbox.checked = isCollectChecked;
+        updateCollectState();
+    });
+    document.getElementById('is-collect').addEventListener('change', function() {
+        isCollectChecked = this.checked;
+        localStorage.setItem('isCollectChecked', isCollectChecked);
+        updateCollectState();
+    })
+
+
+    function saveOrder() {
+        var form = document.getElementById('order-form');
+        var formData = new FormData(form);
+        var email = formData.get('email');
+        var fullName = formData.get('full_name');
+        var phoneNumber = formData.get('phone_number');
+        var isCollect = formData.get('is_collect') === 'True';
+        var address1 = formData.get('address1');
+
+        clearErrors();
+
+        var errors = {};
+        if(!email) {
+            errors['email'] = 'Please enter your email address.';
+        }
+        if(!fullName) {
+            errors['full_name'] = 'Please enter your full name.';
+        }
+        if (!phoneNumber) {
+            errors['phone_number'] = 'Please enter your phone number.';
+        }
+        if (!isCollect && !address1) {
+            errors['address1'] = 'Please enter your address.';
+        }
+
+        if(Object.keys(errors).length > 0) {
+            displayErrors(errors);
+            return;
+        }
+        
+
+        var firstName = fullName.split(' ')[0];
+        var lastName = fullName.split(' ')[1];
+        var address1 = formData.get('address1');
+        var address2 = formData.get('address2');
+        var products = JSON.stringify(purchasedProducts);
+        var shippingAddress = address1 + ', ' + address2;
+
+        showLoadingScreen();
+
+        // Check for product availability
+        $.ajax({
+            type: 'POST',
+            url: '{% url "check_product_availability" %}',
+            data: {
+                'products': JSON.stringify(purchasedProducts),
+                'csrfmiddlewaretoken': '{{ csrf_token }}',
+            },
+            success: (response) => {
+                var products = JSON.stringify(purchasedProducts)
+                var total_owed
+                if (isCollectChecked) {
+                    total_owed = totalWithoutShipping;
+                } else {
+                    total_owed = cartTotal;
+                }
+                // Make an AJAX request to save the order on the server
+                $.ajax({
+                    type: "POST",
+                    url: '{% url "save_order" %}',
+                    data: {
+                        'email': email,
+                        'first_name': firstName,
+                        'last_name': lastName,
+                        'products': products,
+                        'shipping_address': $('#id_address1').val() + ', ' + $('#id_address2').val(),
+                        'is_collect': isCollect,
+                        'payment_method': 'cash',
+                        'amount': total_owed,
+                        'csrfmiddlewaretoken': '{{ csrf_token }}',
+                    },
+                    success: (serverResponse) => {
+                        hideLoadingScreen();
+                        if (serverResponse.success) {
+                            // Redirect the user to the payment success page
+                            window.location.href = "{% url 'payment_success' %}";
+                        } else {
+                            displayErrors(serverResponse.errors);
+                        }
+                    },
+                    error: (xhr, status, error) => {
+                        hideLoadingScreen();
+                        console.error('Error saving order:', error);
+                    }
+                });
+            },
+            error: (xhr, status, error) => {
+                hideLoadingScreen();
+                console.error('Error checking product availability:', error);
+            }
+        });
+    }
+
+
+    function saveOrderInfo(){
+        const form = document.getElementById('order-form');
+        let formData = new FormData(form);
+        
+        // Clear previous error messages and field highlighting
+        clearErrors()
+
+        // Make an AJAX request to save the shipping information
+        fetch("{% url 'save_shipping_info' %}", {
+            method: 'POST',
+            body: formData,
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Shipping information saved successfully, update Paystack form fields
+                const paystackForm = document.getElementById('paystack-form');
+                const isCashChecked = document.getElementById('cash-payment').checked;
+                paystackForm.querySelector('input[name="email"]').value = formData.get('email');
+                paystackForm.querySelector('input[name="first_name"]').value = formData.get('full_name').split(' ')[0];
+                paystackForm.querySelector('input[name="last_name"]').value = formData.get('full_name').split(' ')[1];
+                paystackForm.querySelector('input[name="phone"]').value = formData.get('phone_number');
+                if (isCashChecked) {
+                    // Proceed with cash payment
+                    saveOrder();
+                } else {
+                    // Proceed with Paystack payment
+                    payWithPaystack();
+                }
+            } else {
+                // Handle error if shipping information could not be saved
+                displayErrors(data.errors);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    };
+
+
+    function clearErrors(){
+        var errorMessages = document.querySelectorAll('.text-danger');
+        errorMessages.forEach(function(errorMessage) {
+            errorMessage.remove();
+        });
+        var errorFields = document.querySelectorAll('.error-field');
+        errorFields.forEach(function(errorField) {
+            errorField.classList.remove('error-field');
+        });
+    }
+    
+    
+    function displayErrors(errors) {
+        for (var field in errors) {
+            var errorMessage = document.createElement('span');
+            errorMessage.classList.add('text-danger');
+            var smallElement = document.createElement('small');
+            smallElement.innerText = errors[field];
+            errorMessage.appendChild(smallElement);
+
+            var inputField = document.querySelector('[name="' + field + '"]');
+            inputField.parentNode.insertBefore(errorMessage, inputField.nextSibling);
+            inputField.classList.add('error-field');
+        }
+    }
+
+    
+    function payWithPaystack() {
+        var paystackForm = document.getElementById('paystack-form');
+        var email = paystackForm.querySelector('input[name="email"]').value;
+        var firstName = paystackForm.querySelector('input[name="first_name"]').value;
+        var lastName = paystackForm.querySelector('input[name="last_name"]').value;
+        var phone = paystackForm.querySelector('input[name="phone"]').value;
+        var isCollect = document.getElementById('is-collect').checked;
+
+        // Calculate total amount
+        var totalAmount = 0;
+        var cartItems = document.querySelectorAll('.cart-item');
+        cartItems.forEach(function(item) {
+            var quantityField = item.querySelector('.quantity-field');
+            var price = parseFloat(quantityField.dataset.price);
+            var quantity = parseInt(quantityField.value);
+            totalAmount += (price * quantity);
+            console.log(totalAmount)
+        });
+
+        var shippingFee = parseFloat(document.getElementById('shipping-fee').innerText.split('R')[1]);
+        totalAmount += shippingFee;
+
+        // Check for product availability before initiating payment
+        $.ajax({
+            type: "POST",
+            url: '{% url "check_product_availability" %}',
+            data: {
+                'products': JSON.stringify(purchasedProducts),
+                'csrfmiddlewaretoken': '{{ csrf_token }}',
+            },
+            success: (response) => {
+                if (response.success) {
+                    // Proceed with Paystack payment
+                    const handler = new PaystackPop();
+                    handler.newTransaction({
+                        key: '{{ paystack_public_key }}',
+                        email: email,
+                        amount: totalAmount * 100,
+                        currency: "ZAR",
+                        ref: ''+Math.floor((Math.random() * 1000000000) +1),
+                        firstname: firstName,
+                        lastname: lastName,
+                        phone: phone,
+                        onSuccess: (response) => {
+                            var products = JSON.stringify(purchasedProducts)
+                            // Make an AJAX request to save the order on the server
+                            $.ajax({
+                                type: "POST",
+                                url: '{% url "save_order" %}',
+                                data: {
+                                    'email': email,
+                                    'first_name': firstName,
+                                    'last_name': lastName,
+                                    'products': products,
+                                    'shipping_address': $('#id_address1').val() + ', ' + $('#id_address2').val(),
+                                    'is_collect': isCollect,
+                                    'amount': totalAmount,
+                                    'payment_method': 'paystack',
+                                    'csrfmiddlewaretoken': '{{ csrf_token }}',
+                                },
+                                success: (serverResponse) => {
+                                    // Redirect the user to the payment success page
+                                    window.location.href = "{% url 'payment_success' %}";
+                                },
+                                error: (xhr, status, error) => {
+                                    // Handle error here
+                                    console.error('Error saving order:', error);
+                                }
+                            })
+                        },
+                        onCancel: () => {
+                            // user closed popup
+                        },
+                    });
+                } else {
+                    displayAlert(response.error, 'danger');
+                }
+            },
+            error: (xhr, status, error) => {
+                console.error('Error checking product availability:', error);
+            }
+        });
+    }
+
+
+    function showLoadingScreen() {
+        // Create a loading indicator element
+        var loadingIndicator = document.createElement('div');
+        loadingIndicator.classList.add('loading-indicator');
+        loadingIndicator.innerHTML = '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>'
+
+        // Create a dimmer element
+        var dimmer = document.createElement('div');
+        dimmer.classList.add('dimmer');
+
+        // Append the loading indicator and the dimmer to the body
+        document.body.appendChild(loadingIndicator);
+        document.body.appendChild(dimmer);
+    }
+
+    function hideLoadingScreen() {
+        // Remove the loading indicator and the dimmer from the body
+        var loadingIndicator = document.querySelector('.loading-indicator');
+        var dimmer = document.querySelector('.dimmer');
+        if (loadingIndicator) {
+            loadingIndicator.remove();
+        }
+        if (dimmer) {
+            dimmer.remove();
+        }
+    }
+
+
+   /* Google Maps */ 
+    function initMap() {
+        var map = new google.maps.Map(document.getElementById('map'), {
+            center: { lat: -34.397, lng: 150.644 },
+            zoom: 8
+        });
+
+        var input = document.getElementById('id_address1');
+        var autocomplete = new google.maps.places.Autocomplete(input);
+
+        autocomplete.addListener('place_changed', function () {
+            var place = autocomplete.getPlace();
+            if (!place.geometry) {
+                console.log("No details available for input: '" + place.name + "'");
+                return;
+            }
+
+            map.setCenter(place.geometry.location);
+            map.setZoom(17);
+
+            var marker = new google.maps.Marker({
+                map: map,
+                position: place.geometry.location
+            });
+
+            // Populate the address fields with the selected location details
+            document.getElementById('id_address1').value = place.formatted_address;
+            document.getElementById('id_address2').value = '';
+        });
+    }
+</script>
+<script src="https://js.paystack.co/v2/inline.js"></script>
+<script async src="https://maps.googleapis.com/maps/api/js?key={{maps_javascript_api_key}}&libraries=places&loading=async&callback=initMap"></script>
+{% endblock %}
+

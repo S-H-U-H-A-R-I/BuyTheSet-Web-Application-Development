@@ -1,0 +1,16 @@
+<div class="sidebar d-flex flex-column">
+    <ul>
+        <li{% if request.path == '/admin_panel/' %} class="active"{% endif %}>
+            <a href="{% url 'admin-panel' %}">
+                <i class="bi bi-house" alt="Home icon"></i>
+                <span>HOME</span>
+            </a>
+        </li>
+        <li{% if request.path == '/admin_panel/products/' %} class="active"{% endif %}>
+            <a href="{% url 'admin-products' %}">
+                <i class="bi bi-tags" alt="Product icon"></i>
+                <span>PRODUCTS</span>
+            </a>
+        </li>
+    </ul>
+</div>

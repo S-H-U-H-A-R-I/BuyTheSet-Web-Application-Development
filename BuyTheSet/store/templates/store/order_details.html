@@ -1,0 +1,99 @@
+{% extends 'store/base.html' %}
+
+{% block content %}
+<div class="container custom-my">
+  <h2>Order Details</h2>
+  <div class="card">
+    <div class="card-body">
+      <h5 class="card-title"><strong>Order #{{ order.id }}</strong></h5>
+      <p class="card-text" style="margin-bottom: 30px;">
+        <strong>Order Date:</strong> {{ order.date_ordered }}<br>
+        <strong>Email:</strong> {{ order.user.email }}<br>
+        {% if order.is_collect %}
+        <strong>Collection Address:</strong> 24 Brantwood street, Sandlewood Mews, Kuilsriver, Cape Town<br>
+        {% else %}
+        <strong>Delivery Address:</strong><br>
+        {% if order.is_delivered %}
+        {{ order.shipping_address|linebreaks }}
+        {% else %}
+        <textarea id="shipping_address" class="form-control my-1 mb-3" rows="1" required>{{ order.shipping_address }}</textarea>
+        <p id="error_message" class="text-danger" style="display: none;"></p>
+        {% endif %}
+        {% endif %}
+        {% if order.delivered_date %}
+        <strong>Delivery Date:</strong> {{ order.delivered_date|date:"F d, Y" }}<br>
+        {% endif %}
+      </p>
+      <h6 class="card-subtitle mb-2 text-muted">Order Items</h6>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Product</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in order.orderitem_set.all %}
+                    <tr>
+                        <td><img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="img-fluid round-image" style="min-width: 50px; min-height: 50px; max-width: 50px; max-height: 50px;"></td>
+                        <td>{{ item.product.name }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>{{ item.price }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+      <p class="card-text">
+        <strong>Total Amount:</strong> {{ order.total_amount}}
+      </p>
+      {% if not order.is_delivered and not order.is_collect %}
+      <button id="saveChangesBtn" class="btn btn-primary">Save Changes</button>
+      {% endif %}
+    </div>
+  </div>
+</div>
+<script>
+    $(document).ready(function() {
+        // Adjust textarea height based on content
+        function adjustTextareaHeight() {
+            var textarea = document.getElementById("shipping_address");
+            textarea.style.height = "auto";
+            textarea.style.height = textarea.scrollHeight + "px";
+        }
+        adjustTextareaHeight();
+        $('#shipping_address').on('input', adjustTextareaHeight)
+        
+
+        $("#saveChangesBtn").click(function() {
+            var shippingAddress = $("#shipping_address").val();
+            var orderId = {{ order.id }};
+
+            if (shippingAddress.trim() === '') {
+                $('#error_message').text('Please enter a delivery address.').show();
+                return;
+            }
+
+            $.ajax({
+                url: '{% url "update_order" %}',
+                type: 'POST',
+                data: JSON.stringify({
+                    'order_id': orderId,
+                    'shipping_address': shippingAddress,
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }),
+                contentType: 'application/json',
+                success: function(response) {
+                    window.location = '/order-history/';
+                },
+                error: function(response) {
+                    //display errors in the delivery_address field
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

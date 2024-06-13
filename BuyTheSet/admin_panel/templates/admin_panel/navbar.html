@@ -1,0 +1,18 @@
+{% load static %}
+<nav class="navbar">
+    <div class="navbar-logo">
+        <img src="{% static 'assets/logo.png'%}" class="logo">
+        <img src="{% static 'assets/smol_logo.png'%}" class="logo-smol d-none">
+    </div>
+    <div class="navbar-content justify-content-start">
+        <div class="d-flex">
+            <button class="btn sidebar-toggle" id="sidebar-toggle">
+                <i class="bi bi-arrow-bar-left" id="sidebar-toggle-left"></i>
+                <i class="bi bi-arrow-bar-right d-none" id="sidebar-toggle-right"></i>
+            </button>
+        </div>
+        <div class="navbar-items">
+            <h3>Navbar-content</h3>
+        </div>
+    </div>
+</nav>

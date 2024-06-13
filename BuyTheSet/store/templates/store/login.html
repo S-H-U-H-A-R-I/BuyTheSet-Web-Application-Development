@@ -1,0 +1,65 @@
+{% extends 'store/base.html' %}
+{% block content %}
+<div class="container custom-my login-container d-flex align-items-center justify-content-center" style="min-height: calc(100vh - 400px);" >
+    <div class="row justify-content-center w-100">
+        <div class="col-12 col-md-8 col-lg-6">
+            <div class="card shadow">
+                <div class="card-body d-flex flex-column align-items-center">
+                    <small id="error-message" style="display: none;"></small>
+                    <form class="w-100 w-md-75" id="login-form">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                        <input type="text" class="form-control" name="username" placeholder="Enter your Username">
+                        </div>
+                        <div class="mb-3">
+                        <input type="password" class="form-control" name="password" placeholder="Enter your Password">
+                        </div>
+                        <div class="d-flex justify-content-center">
+                            <button type="submit" class="btn btn-secondary">Login</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const form = document.getElementById('login-form');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.querySelector('input[name="username"]').value;
+            const password = document.querySelector('input[name="password"]').value;
+            try {
+                const response = await fetch ('{% url "login" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({ username, password }),
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    if (data.redirect) {
+                        window.location.href = data.redirect;
+                    } else {
+                        console.log(data.error);
+                    }
+                } else {
+                    displayError(data.error);
+                }
+            } catch(error) {
+                console.error('Error:', error);
+            }
+        });
+
+        function displayError(message) {
+            const errorMessage = document.getElementById('error-message');
+            errorMessage.style.color = 'red';
+            errorMessage.style.display = 'block';
+            errorMessage.textContent = message;
+        }
+    });
+</script>
+{% endblock content %}

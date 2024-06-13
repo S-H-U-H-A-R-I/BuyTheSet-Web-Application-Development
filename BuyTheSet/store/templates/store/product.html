@@ -1,0 +1,121 @@
+{% extends 'store/base.html' %} {% load custom_filters %}{% block content %}
+<br />
+<div id="alert-container" class="position-fixed end-0 m-3" style="z-index: 9999;"></div>
+<div class="container custom-my product-container">
+  <div class="card mb-3">
+    <div class="row g-0">
+      <div class="col-md-4">
+            <div id="productCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-pause="hover" data-bs-interval="5000" data-bs-wrap="true">
+                <div class="carousel-inner">
+                    {% for image in images %}
+                    <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                        <img src="{{ image }}" class="d-block w-100 round-image" alt="{{ product.name }}">
+                    </div>
+                    {% endfor %}
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#productCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#productCarousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                </button>
+            </div>
+            <div class="zoom-overlay">
+                <img src="" alt="" class="zoomed">
+                <div class="prev-arrow"><i class="bi bi-chevron-left"></i></div>
+                <div class="next-arrow"><i class="bi bi-chevron-right"></i></div>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="card-body">
+                <h1 class="card-title">{{ product.name }}</h1>
+                <p class="card-text">{{ product.description|linebreaks }}</p>
+                <div class="product-price">
+                    {% if product.is_sale %}
+                    <span class="price fw-bold">
+                        <strike>R{{ product.price }}</strike>&nbsp;
+                        R{{ product.sale_price }}
+                    </span>
+                    {% else %}
+                    <span class="price fw-bold">R{{ product.price }}</span>
+                    {% endif %}
+                </div>
+                <div class="product-quantity">
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <small>Quantity</small>
+                    </div>
+                    <div class="col-md-2">
+                        <select class="form-select form-select-sm" id="qty-cart">
+                            {% for i in product.quantity|range_to %}
+                            <option value="{{i}}">{{i}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <button type="button" value="{{ product.id }}" class="btn btn-dark" id="add-cart">Add to cart</button>
+            </div>
+        </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Check if button with id="add-cart" is pressed
+  $(document).on('click', '#add-cart', function (e) {
+    e.preventDefault();
+
+    // Send an AJAX POST request to the cart_add URL
+    $.ajax({
+      type: "POST",
+      url: '{% url "cart_add" %}',
+      data: {
+        product_id: $('#add-cart').val(),
+        product_qty: $('#qty-cart option:selected').text(),
+        csrfmiddlewaretoken: '{{ csrf_token }}',
+        action: 'post'
+      },
+      success: function (response) {
+        if (response.success) {
+            // Update the cart quantity in the navbar
+            $('#cart_quantity').text(response.cart_quantity);
+        } else {
+            displayAlert(response.error, 'danger');
+        }
+      },
+      error: function (xhr, status, error) {
+        console.error(error);
+      },
+    });
+  });
+
+  // Image zoom
+    $(document).ready(function() {
+        $('#productCarousel .carousel-item img').on('click', function() {
+            var $zoomedImg = $('.zoom-overlay img.zoomed');
+            $zoomedImg.attr('src', $(this).attr('src'));
+            $(this).toggleClass('zoomed');
+            $('.zoom-overlay').toggleClass('show');
+        });
+
+        $('.zoom-overlay img.zoomed').on('click', function() {
+            $('.zoom-overlay').toggleClass('show');
+        });
+    
+        $('.zoom-overlay .prev-arrow, .zoom-overlay .next-arrow').on('click', function() {
+            var $carousel = $('#productCarousel');
+            var $activeItem = $carousel.find('.carousel-item.active');
+            var $nextItem = $(this).hasClass('prev-arrow') ? $activeItem.prev() : $activeItem.next();
+        
+            if ($nextItem.length) {
+                $carousel.carousel('pause');
+                $carousel.carousel($nextItem.index());
+                var $zoomedImg = $('.zoom-overlay img.zoomed');
+                $zoomedImg.attr('src', $nextItem.find('img').attr('src'));
+            }
+        });
+    });
+  
+</script>
+{% endblock %}

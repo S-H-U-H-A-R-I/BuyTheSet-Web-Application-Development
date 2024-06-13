@@ -1,0 +1,25 @@
+:root {
+    /* measurements */
+    --navbar-height: 3rem;
+    --sidebar-width: 14rem;
+    --sidebar-minimized-width: 2.5rem;
+    /* colours */
+    --primary-bg-color: #090910;
+    --bg-theme: #090910;
+    --border-color: #30363db3;
+    --card-color: #0D1117;
+    --neon-color: #39ff14;
+    --deactivated-color: #999;
+    --disabled-color: #30363db3;
+    --active-color: #006eff;
+}
+@keyframes glow {
+    50% {
+        box-shadow: 0 0 2.5px var(--neon-color), 0 0 3.5px var(--neon-color), 0 0 4.5px var(--neon-color);
+    }
+}
+@keyframes glow-color {
+    50% {
+        text-shadow: 0 0 1.5px var(--neon-color), 0 0 2.5px var(--neon-color), 0 0 3.5px var(--neon-color);
+    }
+}

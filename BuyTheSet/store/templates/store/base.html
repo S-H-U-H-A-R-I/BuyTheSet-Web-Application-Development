@@ -1,0 +1,94 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="description" content="" />
+    <meta name="author" content="" />
+    <title>BuyTheSet</title>
+    <!-- Icon -->
+    <link rel="icon" type="image/png" href="{% static 'assets/icon.png' %}" />
+    <!-- Bootstrap icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css" rel="stylesheet" />
+    <!-- Bootstrap CSS theme -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous" />
+    <!-- Jquery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <!-- Core theme CSS (includes Bootstrap) -->
+    <link href="{% static 'css/styles.css' %}" rel="stylesheet" />
+    <link href="{% static 'css/custom-styles.css' %}" rel="stylesheet" />
+    <link href="{% static 'css/custom-styles-mobile.css' %}" rel="stylesheet" />
+  </head>
+
+  <body class="d-flex flex-column min-vh-100">
+    {% include 'store/navbar.html' %}
+    <!-- Alerts -->
+    {% if message %}
+        <div id="alert-container" class="position-fixed end-0 m-3" style="z-index: 9999;"></div>
+    {% endif %}
+    <!-- Block content -->
+    <main class="flex-grow-1">
+        {% block content %}
+        {% endblock %}
+    </main>
+    <!-- Footer -->
+    <footer class="py-5 mt-auto">
+    <div class="container">
+        <p class="m-0 text-center text-white"><a href="mailto:buythesetcpt@gmail.com" style="color: #fff;">buythesetcpt@gmail.com</a></p>
+    </div>
+    </footer>
+    <!-- Mobile Menu -->
+    <div id="mobileMenu" class="mobile-menu d-lg-none">
+        <button type="button" class="mobile-menu-close" id="mobileMenuClose">
+            <i class="bi bi-chevron-bar-up"></i>
+        </button>
+        <div class="mobile-menu-content">
+            {% if not request.user.is_authenticated %}
+            <a class="dropdown-item" href="{% url 'login' %}">Login</a>
+            <a class="dropdown-item" href="{% url 'register' %}">Register</a>
+            {% comment %} <a class="dropdown-item" href="#">FAQ</a> {% endcomment %}
+            {% else %}
+            <a class="dropdown-item" href="{% url 'update_user' %}">My Account</a>
+            <a class="dropdown-item" href="{% url 'order_history' %}">My Orders</a>
+            {% endif %}
+            {% comment %} <a class="dropdown-item" href="#">Contact</a> {% endcomment %}
+            {% if request.user.is_authenticated %}
+            <a class="dropdown-item" href="{% url 'logout' %}">Logout</a>
+            {% endif %}
+        </div>
+    </div>
+    <!-- Cart Sidebar -->
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="cartOffcanvas" aria-labelledby="cartOffcanvasLabel">
+        <div class="offcanvas-header">
+            <button type="button" class="custom-btn-close" data-bs-dismiss="offcanvas" aria-label="Close">
+                <i class="bi bi-chevron-right"></i>
+            </button>
+            <h5 id="cartOffcanvasLabel" class="offcanvas-title mx-auto">Cart</h5>
+        </div>
+        <hr class="cart-header-line">
+        <div class="offcanvas-body">
+            <div id="cartItems" class="cart-items-container"></div>
+        </div>
+        <div class="offcanvas-filler"></div>
+        <div class="offcanvas-footer">
+            <div class="d-flex justify-content-between align-items-center checkout-btn-container">
+                <a href="{% url 'checkout' %}" class="btn btn-dark w-100 checkout-btn">Checkout</a>
+            </div>
+        </div>
+    </div>
+    <!-- LazyLoad -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-lazyload/12.4.0/lazyload.min.js"></script>
+    <!-- Bootstrap core JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <!-- Marked.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js" integrity="sha512-xeUh+KxNyTufZOje++oQHstlMQ8/rpyzPuM+gjMFYK3z5ILJGE7l2NvYL+XfliKURMpBIKKp1XoPN/qswlSMFA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- Axios -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <!-- Core theme JS -->
+    <script src="{% static 'js/scripts.js' %}"></script>
+    {% block scripts %}
+    {% endblock %}
+  </body>
+</html>

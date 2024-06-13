@@ -1,0 +1,69 @@
+{% extends 'admin_panel/panel.html' %}
+{% load static %}
+{% block title %}Products{% endblock %}
+{% block styles %}
+<link rel="stylesheet" href={% static 'css/panel-products-styles.css' %}>
+{% endblock %}
+{% block content %}
+<div class="filter-container">
+    <div class="filter" data-filter="date_created">
+        <input type="checkbox" id="filter-date_created" data-filter="date_created" class="d-none">
+        <label for="filter-date_created"><small>DATE CREATED</small></label>
+    </div>
+    <div class="filter" data-filter="name">
+        <input type="checkbox" id="filter-name" data-filter="name" class="d-none">
+        <label for="filter-name"><small>PRODUCT NAME</small></label>
+    </div>
+    <!-- Add other filters here -->
+</div>
+<div class="row products">
+    {% for product in products %}
+    <div class="mb-4">
+        <div class="card" data-product-id="{{ product.id }}">
+            <div class="card-header">
+                <div class="card-title-container">
+                    <h5 class="editable-field card-title" name="name">{{ product.name }}</h5>
+                    <div class="switch-container">
+                        <div class="switch-archive">
+                            <input type="checkbox" name="is_archived" id="archive-switch-{{ product.id }}" class="archive-switch" {% if not product.is_archived %}checked{% endif %}>
+                            <label class="thumb-archive" for="archive-switch-{{ product.id }}"></label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="mb-3 product-images-container">
+                    <img src="/media/{{ product.image }}" class="card-img-top img-fluid rounded" alt="{{ product.name }}">
+                    {% for image in product.additional_images.all %}
+                    <img src="/media/{{ image.image }}" class="card-img-top img-fluid rounded" alt="{{ product.name }}">
+                    {% endfor %}
+                    <!-- Add image placeholder div -->
+                    <div class="add-image-placeholder">
+                        <i class="bi bi-plus-circle"></i>
+                    </div>
+                </div>
+                <div class="tags-container">
+                    {% for tag in product.tags.all %}
+                    <span class="editable-field badge tag">{{ tag.name }}</span>
+                    {% endfor %}
+                </div>
+                <p class="editable-field description" name="description">{{ product.description }}</p>
+                <!-- Add other product fields here -->
+            </div>
+            <div class="card-footer">
+                <div class="date-created-container">
+                    <span>{{ product.date_created }}</span>
+                </div>
+                <div class="edit-btn">
+                    <input type="checkbox" id="edit-button-{{product.id}}" class="edit-button" {% if not product.is_archived %}disabled{% endif %}/>
+                    <label for="edit-button-{{product.id}}"><i class="bi bi-pencil-square"></i></label>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+{% block scripts %}
+<script type="module" src={% static 'js/admin_panel_scripts/products_app/product-management-app.js' %}></script>
+{% endblock %}

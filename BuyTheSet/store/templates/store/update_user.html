@@ -1,0 +1,36 @@
+{% extends 'store/base.html' %} {% block content %}
+  <!-- Form -->
+    <div class="container custom-my user-info-container d-flex align-items-center justify-content-center" style="min-height: calc(100vh - 400px);">
+        <div class="row justify-content-center w-100">
+            <div class="col-12 col-md-8 col-lg-6">
+                <div class="card shadow">
+                    <div class="card-body d-flex flex-column align-items-center">
+                        <form id="updateUserForm" method="POST" action="{% url 'update_user' %}">
+                            {% csrf_token %}
+                            {% for field in user_form %}
+                                <div class="form-group">
+                                    {{ field }}
+                                    {% if field.errors %}
+                                        <span class="text-danger"><small>{{ field.errors|join:", " }}</small></span><br>
+                                    {% endif %}
+                                    {% if field.help_text %}
+                                        <span class="form-text text-muted"><small>{{ field.help_text }}</small></span>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </form>
+                        <div class="button-container">
+                            <button id="updateBtn" class="btn btn-success">Update</button>
+                            <a href="{% url 'update_password' %}" class="btn btn-secondary">Update Password</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.getElementById("updateBtn").addEventListener("click", function () {
+            document.getElementById("updateUserForm").submit()
+        });
+    </script>
+{% endblock %}

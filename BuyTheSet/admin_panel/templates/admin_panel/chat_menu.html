@@ -1,0 +1,71 @@
+<div id="menu-modal-header" class="modal-header row d-none">
+    <div class="col-2 text-start">
+        <button type="button" class="btn back-btn" id="chat-menu-back-btn">
+            <i class="bi bi-chevron-bar-left"></i>
+        </button>
+    </div>
+    <div class="col-8 text-center">
+        <h5 class="modal-title text-white">Menu</h5>
+    </div>
+    <div class="col-2 text-end">
+        <button type="button" class="btn settings-btn" id="chat-settings-btn">
+            <i class="bi bi-gear"></i>
+        </button>
+    </div>
+</div>
+<div id="menu-modal-body" class="modal-body d-none">
+    {% for chatmessage in chats %}
+    <div class="chat-message" style="{% if forloop.last %}border-bottom: none;{% endif %}">
+        <div id="{{ chatmessage.id }}" class="chat-message-id d-flex justify-content-between align-items-center">
+            <a class="text-decoration-none text-white chat-message-link">
+                <div>
+                    {{ chatmessage.id }}
+                </div>
+            </a>
+            <button id="chat-delete-btn" class="btn chat-delete-btn">
+                <i class="bi bi-x-circle"></i>
+            </button>
+        </div>
+    </div>
+    {% endfor %}
+    <!-- Add more input fields as needed -->
+</div>
+<div id="menu-modal-footer" class="modal-footer d-none">
+    <!-- Add more items as needed -->
+</div> 
+
+
+
+
+<!---------------
+Chat Message View
+---------------->
+
+<div id="message-modal-header" class="modal-header row d-none">
+    <div class="col-2 text-start">
+        <button type="button" class="btn back-btn" id="menu-message-back-btn">
+            <i class="bi bi-chevron-bar-left"></i>
+        </button>
+    </div>
+    <div class="col-8 text-center">
+        <h5 class="modal-title text-white"></h5>
+    </div>
+    <div class="col-2 text-end">
+        <button type="button" class="btn settings-btn" id="chat-settings-btn">
+            <i class="bi bi-gear"></i>
+        </button>
+    </div>
+</div>
+<div id="message-modal-body" class="modal-body d-none">
+    <div class="message-menu-container">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="message-menu-system-message w-100">
+                <textarea class="system-message w-100" placeholder="Enter instructions for the AI model..."></textarea>
+            </div>
+        </div>
+    </div>
+    <!-- Add more input fields as needed -->
+</div>
+<div id="message-modal-footer" class="modal-footer d-none">
+    <!-- Add more items as needed -->
+</div> 

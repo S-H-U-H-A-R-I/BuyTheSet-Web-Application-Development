@@ -1,0 +1,129 @@
+{% extends 'store/base.html' %} {% load custom_filters %} {% block content %}
+<!--alert-->
+<div id="alert-container" class="position-fixed end-0 m-3" style="z-index: 9999;"></div>
+<!--Header-->
+<header class="bg-dark py-5">
+  <div class="container px-4 px-lg-5 my-5">
+    <div class="text-center text-white">
+      <h1 class="display-4 fw-bolder">Shopping Cart</h1>
+    </div>
+  </div>
+</header><br />
+<div class="container">
+  {% if cart_items %}
+  {% for item in cart_items %}
+  <div class="card mb-3">
+    <div class="row g-0">
+      <div class="col-md-4">
+        <img src="{{ item.product.image.url }}" class="img-fluid rounded-start" alt="..." />
+      </div>
+      <div class="col-md-8">
+        <div class="card-body">
+          <h5 class="card-title">{{ item.product.name }}</h5>
+          <p class="card-text justify">{{ item.product.description|linebreaks }}</p>
+          {% if item.product.is_sale %}
+          <span class="price float-end">
+            <strike>R{{ item.product.price }}</strike>&nbsp;
+            R{{ item.product.sale_price }}
+          </span>
+          {% else %}
+          <span class="price float-end">R{{ item.product.price }}</span>
+          {% endif %}
+          <div class="row justify-content-center">
+            <div class="col-md-2">
+              Quantity
+            </div>
+            <div class="col-md-2">
+              <select class="form-select form-select-sm" id="select{{item.product.id}}">
+                {% for i in item.product.quantity|range_to %}
+                <option value="{{i}}" {% if i == item.quantity %}selected{% endif %}>{{i}}</option>
+                {% endfor %}
+              </select>
+              <button type="button" data-index="{{item.product.id}}" class="btn btn-secondary update-cart">Update</button>
+              <button type="button" data-index="{{item.product.id}}" class="btn btn-danger delete-product">Remove</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+   <div class="d-flex justify-content-between align-items-center">
+       <h3>Total: R{{ cart_total }}</h3>
+       <a href="{% url 'checkout' %}" class="btn btn-primary">Proceed to Checkout</a>
+   </div>
+  
+  {% else %}
+  <p>Your cart is empty.</p>
+  <a href="{% url 'home' %}" class="btn btn-primary">Continue Shopping</a>
+  {% endif %}
+</div><br />
+
+<script>
+  // Update the cart
+  $(document).ready(function () { 
+    $('.update-cart').on('click', function (e) {
+      e.preventDefault();
+      var productId = $(this).data('index');
+      var quantity = $('#select' + productId).val();
+      $.ajax({
+        type: 'POST',
+        url: '{% url "cart_update" %}',
+        data: {
+          product_id: productId,
+          product_qty: quantity,
+          csrfmiddlewaretoken: '{{ csrf_token }}',
+        },
+        success: function (response) {
+            if (response.success) {
+            displayAlert(response.message, 'success')
+            $.ajax({
+                type: 'GET',
+                url: '{% url "cart_summary" %}',
+                success: function (data) {
+                    var updatedTotal = $(data).find('h3').text();
+                    $('h3').text(updatedTotal);
+                },
+                error: function (xhr, errmsg, err) {
+                    console.log(xhr.status + ": " + xhr.responseText);
+                }
+            });
+            } else {
+            displayAlert(response.error, 'danger')
+            }
+        },
+        error: function (xhr, errmsg, err) {
+          console.log(xhr.status + ": " + xhr.responseText);
+        },
+      });
+    });
+  });
+  // Delete the item from cart
+  $(document).ready(function () { // Ensure the DOM is fully loaded
+    $('.delete-product').on('click', function (e) {
+      e.preventDefault();
+      // Grab the product ID
+      var productId = $(this).data('index');
+      $.ajax({
+        type: 'POST',
+        url: '{% url "cart_delete" %}',
+        data: {
+          product_id: productId,
+          csrfmiddlewaretoken: '{{ csrf_token }}',
+          action: 'post'
+        },
+        success: function (response) {
+            if (response.success) {
+                window.location.href = '{% url "cart_summary" %}';
+            } else {
+                displayAlert(response.error, 'danger');
+            }
+        },
+        error: function (xhr, errmsg, err) {
+          console.log(xhr.status + ": " + xhr.responseText);
+        },
+      });
+    });
+  });
+</script>
+{% endblock content %}

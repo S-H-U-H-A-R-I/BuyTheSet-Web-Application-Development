@@ -1,0 +1,39 @@
+<div class="modal fade" id="chat-modal" tabindex="-1" aria-labelledby="chat-modal-label" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-white">
+            <div class="modal-header row" id="modal-header">
+                <div class="col-2 text-start">
+                    <button type="button" class="btn menu-btn" id="chat-menu-btn">
+                        <i class="bi bi-three-dots-vertical"></i>
+                    </button>
+                </div>
+                <div class="col-8 text-center">
+                    <h5 class="modal-title text-white" id="chat-modal-label">Chat</h5>
+                </div>
+                <div class="col-2 text-end">
+                    <button type="button" class="btn close-btn" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="bi bi-x-circle"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <div class="chat-container" id="chat-container">
+                    <div class="chat-messages text-white" id="chat-messages">
+                    <!-- Chat messages will be displayed here -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" id="modal-footer">
+                <div class="chat-input-group">
+                    <div id="chat-input" contenteditable="true" data-placeholder="Type a message..." class="chat-input"></div>
+                    <button id="chat-send-btn" class="btn"><i class="bi bi-caret-right"></i></button>
+                </div>
+            </div>
+            <!-- Menu Modal -->
+            {% include 'admin_panel/chat_menu.html' %}
+            <!-- Settings Modal -->
+            {% include 'admin_panel/chat_settings.html' %}
+        </div>  
+    </div>
+</div>
+  

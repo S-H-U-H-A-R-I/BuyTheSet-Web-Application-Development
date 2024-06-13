@@ -1,0 +1,54 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Icon -->
+    <link rel="icon" type="image/png" href="{% static 'assets/icon.png' %}" />
+    <!-- Title -->
+    <title>Admin | {% block title %}Panel{% endblock %}</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Highlight.js -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/base16/3024.css">
+    <!-- Custom Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">  
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/panel-styles.css' %}">
+    <link rel="stylesheet" href="{% static 'css/panel-sidebar-styles.css' %}">
+    <link rel="stylesheet" href="{% static 'css/panel-navbar-styles.css' %}">
+    <link rel="stylesheet" href="{% static 'css/panel-chat-styles.css' %}">
+    {% block styles %}
+    {% endblock %}
+</head>
+<body>
+    <div class="parent-container">
+        {% include 'admin_panel/navbar.html' %}
+        {% include 'admin_panel/sidebar.html' %}
+        <div class="main-content">
+            {% block content %}
+            {% endblock %}
+        </div>
+    </div>
+    <button class="btn chat-btn" data-bs-toggle="modal" data-bs-target="#chat-modal"><i class="bi bi-chat-dots"></i></button>
+    {% include 'admin_panel/chat.html' %}
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <!-- Highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <!-- Marked.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js" integrity="sha512-xeUh+KxNyTufZOje++oQHstlMQ8/rpyzPuM+gjMFYK3z5ILJGE7l2NvYL+XfliKURMpBIKKp1XoPN/qswlSMFA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- Axios -->    
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <!-- Custom Scripts -->
+    <script src="{% static 'js/admin_panel_scripts/admin_panel.js' %}"></script>
+    <script type="module" src="{% static 'js/admin_panel_scripts/chatbot_app/chat-management-app.js' %}"></script>
+    {% block scripts %}
+    {% endblock %}
+</body>
+</html>

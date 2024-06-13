@@ -1,0 +1,46 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top">
+  <div class="container px-4 px-lg-5">
+    <a class="navbar-brand text-uppercase logo text-dark" href="{% url 'home' %}">BuyTheSet</a>
+    {% if request.path != '/payments/checkout/' %}
+    <div class="search-container">
+        <form class="d-flex align-items-center" action="{% url 'home' %}" method="get"> 
+            {% csrf_token %}
+            <div class="search-box">
+                <input class="form-control bg-light text-dark border-none custom-search-input" type="search" placeholder="Search products..." aria-label="Search" name="q" value="{{ request.GET.q }}">
+                <i class="bi bi-search search-icon"></i>
+            </div>
+            {% if selected_tag %}
+            <input type="hidden" name="tag" value="{{ selected_tag }}">
+            {% endif %}
+        </form>
+    </div>
+    {% endif %}
+    <div class="navbar-icons">
+        {% if request.path != '/payments/checkout/' %}
+        <a href="#" class="nav-link cart-icon-container cart-link" data-bs-toggle="offcanvas" data-bs-target="#cartOffcanvas" aria-controls="cartOffcanvas">
+            <i class="bi bi-bag-fill"></i>
+            <span id="cart_quantity" class="cart-quantity">{{ cart_quantity }}</span>
+        </a>
+        {% endif %}
+        <a href="#" class="nav-link profile-icon-container d-none d-lg-inline-block" id="profileDrowpdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-person-circle"></i>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDrowpdown">
+            {% if user.is_authenticated %}
+            <li><a class="dropdown-item" href="{% url 'update_user' %}">My Account</a></li>
+            <li><hr class="dropdown-divider"></li>                    
+            <li><a class="dropdown-item" href="{% url 'order_history' %}">My Orders</a></li>
+            <li><hr class="dropdown-divider"></li>                    
+            <li><a class="dropdown-item" href="{% url 'logout' %}">Logout</a></li>
+            {% else %}
+            <li><a class="dropdown-item" href="{% url 'login' %}">Login</a></li>    
+            <li><hr class="dropdown-divider"></li>                    
+            <li><a class="dropdown-item" href="{% url 'register' %}">Register</a></li>
+            {% endif %}                        
+        </ul>
+        <a href="#" class="nav-link menu-icon-container d-lg-none" id="menuButton">
+            <i class="bi bi-list"></i>
+        </a>
+    </div>
+  </div>
+</nav>

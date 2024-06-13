@@ -1,0 +1,20 @@
+{% extends 'store/base.html' %}
+{% block content %}
+<div class="container custom-my">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card shadow-lg">
+                <div class="card-body text-center">
+                    <i class="bi bi-check-circle-fill text-success display-1 mb-3"></i>
+                    <h1 class="mb-3">Thank You!</h1>
+                    <p class="lead mb-4">Your order has been placed successfully.</p>
+                    <p>You will receive an order confirmation email with details of your order.</p>
+                    <div class="my-4">
+                        <a href="{% url 'home' %}" class="btn btn-outline-primary btn-sm">Continue Shopping</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

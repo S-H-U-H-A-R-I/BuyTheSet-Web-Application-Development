@@ -1,0 +1,90 @@
+{% extends 'store/base.html' %} {% block content %}
+<!-- Form -->
+<div class="container custom-my register-container d-flex align-items-center justify-content-center" style="min-height: calc(100vh - 400px);" >
+  <div class="row justify-content-center w-100">
+    <div class="col-12 col-md-8 col-lg-6" >
+        <div class="card shadow">
+            <div class="card-body d-flex flex-column align-items-center">
+                <small id="error-message" style="display: none;"></small>
+                <form id="register-form" class="w-100 w-md-75">
+                    {% csrf_token %} 
+                    {% for field in form %}
+                        <div class="form-group">
+                            {{ field.label_tag }}
+                            {{ field }}
+                            {% if field.errors %}
+                                <small class="text-danger">{{ field.errors|join:", " }}</small>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                    <br />
+                    <div class="d-flex justify-content-center">
+                        <button type="submit" class="btn btn-secondary">Register</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+  </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const form = document.getElementById('register-form');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.querySelector('input[name="username"]').value;
+            const first_name = document.querySelector('input[name="first_name"]').value;
+            const last_name = document.querySelector('input[name="last_name"]').value;
+            const email = document.querySelector('input[name="email"]').value;
+            const password1 = document.querySelector('input[name="password1"]').value;
+            const password2 = document.querySelector('input[name="password2"]').value;
+            try {
+                const response = await fetch ('{% url "register" %}', {
+                    method: 'POST',
+                    headers: {
+                        'content-type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({ username, first_name, last_name, email, password1, password2 })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    if (data.redirect) {
+                        window.location.href = data.redirect;
+                    } else {
+                        console.log(data.error);
+                    }
+                } else {
+                    if (data.errors) {
+                        Object.keys(data.errors).forEach((key) => {
+                            const field = document.querySelector(`[name="${key}"]`);
+                            const parentElement = field.parentNode;
+                            console.log(parentElement);
+                            const errorMessage = data.errors[key].join(', ');
+                            let errorMessageElement = parentElement.querySelector('small');
+                            if (!errorMessageElement) {
+                                errorMessageElement = document.createElement('small');
+                                parentElement.appendChild(errorMessageElement);
+                            }
+                            errorMessageElement.textContent = errorMessage;
+                            errorMessageElement.style.color = 'red';
+                            errorMessageElement.style.display = 'block';
+                        });
+                    } else {
+                        displayError(data.error);
+                    }
+                }
+            } catch(error) {
+                console.error('Error:', error);
+            }
+        });
+
+        function displayError(message) {
+            const errorMessage = document.getElementById('error-message');
+            errorMessage.style.color = 'red';
+            errorMessage.style.display = 'block';
+            errorMessage.textContent = message;
+        }
+    });
+</script>
+{% endblock content %}
